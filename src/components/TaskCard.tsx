@@ -7,12 +7,15 @@ import PersonIcon from '@mui/icons-material/Person';
 import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
 import LabelIcon from '@mui/icons-material/Label';
 import EditIcon from '@mui/icons-material/Edit';
+import DeleteIcon from '@mui/icons-material/Delete';
 import IconButton from '@mui/material/IconButton';
+import { useNavigate } from 'react-router-dom';
 
 interface TaskCardProps {
     task: Task;
     index: number;
     onEdit: (task: Task) => void;
+    onDelete: (taskId: string) => void;
 }
 
 const getPriorityColor = (priority?: string) => {
@@ -28,7 +31,14 @@ const getPriorityColor = (priority?: string) => {
     }
 };
 
-const TaskCard: React.FC<TaskCardProps> = ({ task, index, onEdit }) => {
+const TaskCard: React.FC<TaskCardProps> = ({
+    task,
+    index,
+    onEdit,
+    onDelete,
+}) => {
+    const navigate = useNavigate();
+
     return (
         <Draggable draggableId={task.id} index={index}>
             {(provided, snapshot) => (
@@ -36,6 +46,10 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, index, onEdit }) => {
                     ref={provided.innerRef}
                     {...provided.draggableProps}
                     {...provided.dragHandleProps}
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        navigate(`/task/${task.id}`);
+                    }}
                     sx={{
                         p: 2,
                         mb: 1,
@@ -62,7 +76,7 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, index, onEdit }) => {
                                 theme.palette.mode === 'dark'
                                     ? '0 2px 8px rgba(0,0,0,0.3)'
                                     : '0 2px 8px rgba(0,0,0,0.15)',
-                            '& .edit-button': {
+                            '& .edit-button, & .delete-button': {
                                 opacity: 1,
                             },
                         },
@@ -73,26 +87,57 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, index, onEdit }) => {
                         transition: 'all 0.2s ease-in-out',
                     }}
                 >
-                    <IconButton
-                        className="edit-button"
-                        size="small"
-                        onClick={() => onEdit(task)}
+                    <Box
                         sx={{
                             position: 'absolute',
                             right: 8,
                             top: 8,
-                            opacity: 0,
-                            transition: 'opacity 0.2s',
-                            bgcolor: 'background.paper',
-                            boxShadow: 1,
-                            '&:hover': {
-                                bgcolor: 'background.paper',
-                            },
-                            zIndex: 1,
+                            display: 'flex',
+                            gap: 1,
+                            zIndex: 2,
                         }}
                     >
-                        <EditIcon fontSize="small" />
-                    </IconButton>
+                        <IconButton
+                            className="edit-button"
+                            size="small"
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                onEdit(task);
+                            }}
+                            sx={{
+                                opacity: 0,
+                                transition: 'opacity 0.2s',
+                                bgcolor: 'background.paper',
+                                boxShadow: 1,
+                                '&:hover': {
+                                    bgcolor: 'background.paper',
+                                },
+                            }}
+                        >
+                            <EditIcon fontSize="small" />
+                        </IconButton>
+                        <IconButton
+                            className="delete-button"
+                            size="small"
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                onDelete(task.id);
+                            }}
+                            sx={{
+                                opacity: 0,
+                                transition: 'opacity 0.2s',
+                                bgcolor: 'background.paper',
+                                boxShadow: 1,
+                                color: 'error.main',
+                                '&:hover': {
+                                    bgcolor: 'error.light',
+                                    color: 'white',
+                                },
+                            }}
+                        >
+                            <DeleteIcon fontSize="small" />
+                        </IconButton>
+                    </Box>
                     <Box sx={{ position: 'relative' }}>
                         <Box
                             sx={{
@@ -137,7 +182,10 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, index, onEdit }) => {
                                                 sx={{ fontSize: '14px' }}
                                             />
                                         }
-                                        sx={{ height: 20, fontSize: '0.75rem' }}
+                                        sx={{
+                                            height: 20,
+                                            fontSize: '0.75rem',
+                                        }}
                                     />
                                 ))}
                             </Box>
@@ -174,7 +222,14 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, index, onEdit }) => {
                                         <Chip
                                             icon={
                                                 <CalendarTodayIcon
-                                                    sx={{ fontSize: '14px' }}
+                                                    sx={{
+                                                        fontSize: '14px',
+                                                        color: (theme) =>
+                                                            theme.palette
+                                                                .mode === 'dark'
+                                                                ? 'inherit'
+                                                                : 'text.secondary',
+                                                    }}
                                                 />
                                             }
                                             label={format(
@@ -185,6 +240,10 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, index, onEdit }) => {
                                             sx={{
                                                 height: 20,
                                                 fontSize: '0.75rem',
+                                                color: 'text.secondary',
+                                                '& .MuiChip-icon': {
+                                                    color: 'inherit',
+                                                },
                                             }}
                                         />
                                     )}
@@ -198,7 +257,10 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, index, onEdit }) => {
                                         }
                                         label={task.assignee}
                                         size="small"
-                                        sx={{ height: 20, fontSize: '0.75rem' }}
+                                        sx={{
+                                            height: 20,
+                                            fontSize: '0.75rem',
+                                        }}
                                     />
                                 )}
                             </Box>

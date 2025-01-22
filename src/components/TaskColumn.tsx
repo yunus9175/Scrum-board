@@ -1,9 +1,5 @@
 import React from 'react';
-import {
-    Droppable,
-    DroppableProvided,
-    DroppableStateSnapshot,
-} from 'react-beautiful-dnd';
+import { Droppable } from 'react-beautiful-dnd';
 import { Typography, Box, Chip } from '@mui/material';
 import TaskCard from './TaskCard';
 import { Column, Task } from '../types/task';
@@ -11,52 +7,19 @@ import { commonStyles } from '../styles/common';
 
 interface TaskColumnProps {
     column: Column;
-    tasksCount: number;
-    onEdit: (task: Task) => void;
+    tasks: Task[];
+    droppableId: string;
+    onDeleteTask: (taskId: string) => void;
+    onEditTask: (task: Task) => void;
 }
 
 const TaskColumn: React.FC<TaskColumnProps> = ({
     column,
-    tasksCount,
-    onEdit,
+    tasks,
+    droppableId,
+    onDeleteTask,
+    onEditTask,
 }) => {
-    const renderDroppableContent = (
-        provided: DroppableProvided,
-        snapshot: DroppableStateSnapshot
-    ) => (
-        <Box
-            ref={provided.innerRef}
-            {...provided.droppableProps}
-            sx={{
-                ...commonStyles.scrollable,
-                flex: 1,
-                p: 1,
-                bgcolor: snapshot.isDraggingOver
-                    ? (theme) =>
-                          theme.palette.mode === 'dark'
-                              ? 'rgba(255, 255, 255, 0.1)'
-                              : 'rgba(25, 118, 210, 0.08)'
-                    : 'transparent',
-                transition: 'background-color 0.2s ease',
-                minHeight: 200,
-                border: (theme) =>
-                    snapshot.isDraggingOver
-                        ? `2px dashed ${theme.palette.primary.main}`
-                        : '2px dashed transparent',
-            }}
-        >
-            {column.tasks.map((task, index) => (
-                <TaskCard
-                    key={task.id}
-                    task={task}
-                    index={index}
-                    onEdit={onEdit}
-                />
-            ))}
-            {provided.placeholder}
-        </Box>
-    );
-
     return (
         <Box
             sx={{
@@ -110,7 +73,7 @@ const TaskColumn: React.FC<TaskColumnProps> = ({
                     {column.title.toUpperCase()}
                 </Typography>
                 <Chip
-                    label={tasksCount}
+                    label={tasks.length}
                     size="small"
                     sx={{
                         bgcolor: 'rgba(255, 255, 255, 0.1)',
@@ -122,8 +85,41 @@ const TaskColumn: React.FC<TaskColumnProps> = ({
             </Box>
 
             {/* Droppable Area */}
-            <Droppable droppableId={column.id}>
-                {renderDroppableContent}
+            <Droppable droppableId={droppableId}>
+                {(provided, snapshot) => (
+                    <Box
+                        ref={provided.innerRef}
+                        {...provided.droppableProps}
+                        sx={{
+                            ...commonStyles.scrollable,
+                            flex: 1,
+                            p: 1,
+                            bgcolor: snapshot.isDraggingOver
+                                ? (theme) =>
+                                      theme.palette.mode === 'dark'
+                                          ? 'rgba(255, 255, 255, 0.1)'
+                                          : 'rgba(25, 118, 210, 0.08)'
+                                : 'transparent',
+                            transition: 'background-color 0.2s ease',
+                            minHeight: 200,
+                            border: (theme) =>
+                                snapshot.isDraggingOver
+                                    ? `2px dashed ${theme.palette.primary.main}`
+                                    : '2px dashed transparent',
+                        }}
+                    >
+                        {tasks.map((task, index) => (
+                            <TaskCard
+                                key={task.id}
+                                task={task}
+                                index={index}
+                                onEdit={onEditTask}
+                                onDelete={onDeleteTask}
+                            />
+                        ))}
+                        {provided.placeholder}
+                    </Box>
+                )}
             </Droppable>
         </Box>
     );

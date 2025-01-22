@@ -36,6 +36,7 @@ const ThemeToggle: React.FC = () => {
                 '&:hover': {
                     bgcolor: 'rgba(255, 255, 255, 0.1)',
                 },
+                fontSize: '0.5rem',
             }}
         >
             <IconWrapper active={!isDarkMode}>

@@ -65,6 +65,37 @@ const AddTaskDialog: React.FC<AddTaskDialogProps> = ({
         onClose();
     };
 
+    const handleLabelsChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        const value = event.target.value;
+
+        // Keep the raw input if it ends with comma
+        if (value.endsWith(',')) {
+            setTaskData((prev) => ({
+                ...prev,
+                labels: [
+                    ...value
+                        .slice(0, -1)
+                        .split(',')
+                        .map((l) => l.trim())
+                        .filter(Boolean),
+                    '',
+                ],
+            }));
+            return;
+        }
+
+        // Split by comma and clean up
+        const labels = value
+            .split(',')
+            .map((label) => label.trim())
+            .filter((label) => label !== '');
+
+        setTaskData((prev) => ({
+            ...prev,
+            labels: labels,
+        }));
+    };
+
     return (
         <Dialog
             open={open}
@@ -214,32 +245,17 @@ const AddTaskDialog: React.FC<AddTaskDialogProps> = ({
                         fullWidth
                     />
                     <TextField
-                        label="Labels (comma-separated)"
-                        value={taskData.labels.join(', ')}
-                        onChange={(e) => {
-                            const inputValue = e.target.value;
-                            // Keep the last comma if user just typed it
-                            const labels = inputValue.endsWith(',')
-                                ? [
-                                      ...inputValue
-                                          .split(',')
-                                          .map((l) => l.trim())
-                                          .filter(Boolean),
-                                      '',
-                                  ]
-                                : inputValue
-                                      .split(',')
-                                      .map((l) => l.trim())
-                                      .filter(Boolean);
-
-                            setTaskData((prev) => ({
-                                ...prev,
-                                labels: labels,
-                            }));
-                        }}
+                        label="Labels"
                         fullWidth
-                        helperText="Enter labels separated by commas"
-                        placeholder="e.g. important, urgent, feature"
+                        value={taskData.labels.join(', ')}
+                        onChange={handleLabelsChange}
+                        placeholder="Enter labels separated by commas"
+                        helperText="Separate labels with commas (e.g. frontend, bug, urgent)"
+                        sx={{
+                            '& .MuiOutlinedInput-root': {
+                                height: '56px',
+                            },
+                        }}
                     />
                 </Box>
             </DialogContent>

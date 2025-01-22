@@ -3,7 +3,7 @@ export type TaskStatus =
     | 'inProgress'
     | 'inReview'
     | 'blocked'
-    | 'hold'
+    | 'onHold'
     | 'completed';
 
 export type TaskPriority = 'low' | 'medium' | 'high';

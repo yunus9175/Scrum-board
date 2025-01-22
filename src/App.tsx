@@ -1,6 +1,11 @@
 // src/App.tsx
 import React, { useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import {
+    BrowserRouter as Router,
+    Routes,
+    Route,
+    useLocation,
+} from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { ThemeProvider as MuiThemeProvider, CssBaseline } from '@mui/material';
 import { getTheme } from './theme';
@@ -11,6 +16,7 @@ import Dashboard from './pages/Dashboard';
 import ProtectedRoute from './components/ProtectedRoute';
 import Navbar from './components/Navbar';
 import { useNavigate } from 'react-router-dom';
+import TaskDetailsPage from './pages/TaskDetailsPage';
 
 const App: React.FC = () => {
     return (
@@ -29,12 +35,13 @@ const AppContent = () => {
     const theme = getTheme(isDarkMode);
     const { setUser, user } = useAuth();
     const navigate = useNavigate();
+    const location = useLocation();
 
     useEffect(() => {
-        if (user) {
+        if (user && location.pathname === '/') {
             navigate('/dashboard', { replace: true });
         }
-    }, [user, navigate]);
+    }, [user, navigate, location]);
 
     const handleLogin = (email: string, password: string) => {
         // Email validation using regex
@@ -76,6 +83,14 @@ const AppContent = () => {
                     element={
                         <ProtectedRoute>
                             <Dashboard />
+                        </ProtectedRoute>
+                    }
+                />
+                <Route
+                    path="/task/:id"
+                    element={
+                        <ProtectedRoute>
+                            <TaskDetailsPage />
                         </ProtectedRoute>
                     }
                 />

@@ -6,7 +6,6 @@ import TaskColumn from './TaskColumn';
 import AddTaskDialog from './AddTaskDialog';
 import { Task, Column, TaskStatus } from '../types/task';
 import { storage } from '../utils/localStorage';
-import { commonStyles } from '../styles/common';
 import SearchIcon from '@mui/icons-material/Search';
 import EditTaskDialog from './EditTaskDialog';
 
@@ -15,7 +14,7 @@ const initialColumns: Column[] = [
     { id: 'inProgress', title: 'In Progress', tasks: [] },
     { id: 'inReview', title: 'In Review', tasks: [] },
     { id: 'blocked', title: 'Blocked', tasks: [] },
-    { id: 'hold', title: 'On Hold', tasks: [] },
+    { id: 'onHold', title: 'On Hold', tasks: [] },
     { id: 'completed', title: 'Completed', tasks: [] },
 ];
 
@@ -115,6 +114,17 @@ const TaskBoard: React.FC = () => {
         storage.setTasks(allTasks);
     };
 
+    const handleDeleteTask = (taskId: string) => {
+        const newColumns = columns.map((col) => ({
+            ...col,
+            tasks: col.tasks.filter((task) => task.id !== taskId),
+        }));
+
+        setColumns(newColumns);
+        const allTasks = newColumns.flatMap((col) => col.tasks);
+        storage.setTasks(allTasks);
+    };
+
     const filteredColumns = columns.map((column) => ({
         ...column,
         tasks: column.tasks.filter(
@@ -134,10 +144,9 @@ const TaskBoard: React.FC = () => {
 
         const container = scrollContainerRef.current;
         const containerRect = container.getBoundingClientRect();
-        const scrollSpeed = 15;
-        const scrollThreshold = 200;
+        const scrollSpeed = 5;
+        const scrollThreshold = 150;
 
-        // Get the dragged element
         const draggedElement = document.querySelector(
             `[data-rbd-draggable-id="${event.draggableId}"]`
         );
@@ -149,22 +158,21 @@ const TaskBoard: React.FC = () => {
 
         if (autoScrollInterval) {
             clearInterval(autoScrollInterval);
+            setAutoScrollInterval(null);
         }
 
-        // Check if dragged element is near the left edge
         if (draggedLeft - containerRect.left < scrollThreshold) {
-            // Scroll left
             const interval = setInterval(() => {
                 const newScrollLeft = container.scrollLeft - scrollSpeed;
                 if (newScrollLeft >= 0) {
                     container.scrollLeft = newScrollLeft;
+                } else {
+                    clearInterval(interval);
+                    setAutoScrollInterval(null);
                 }
             }, 16);
             setAutoScrollInterval(interval);
-        }
-        // Check if dragged element is near the right edge
-        else if (containerRect.right - draggedRight < scrollThreshold) {
-            // Scroll right
+        } else if (containerRect.right - draggedRight < scrollThreshold) {
             const interval = setInterval(() => {
                 const newScrollLeft = container.scrollLeft + scrollSpeed;
                 if (
@@ -172,18 +180,22 @@ const TaskBoard: React.FC = () => {
                     container.scrollWidth - container.clientWidth
                 ) {
                     container.scrollLeft = newScrollLeft;
+                } else {
+                    clearInterval(interval);
+                    setAutoScrollInterval(null);
                 }
             }, 16);
             setAutoScrollInterval(interval);
         }
     };
 
-    const cleanupAutoScroll = () => {
-        if (autoScrollInterval) {
-            clearInterval(autoScrollInterval);
-            setAutoScrollInterval(null);
-        }
-    };
+    useEffect(() => {
+        return () => {
+            if (autoScrollInterval) {
+                clearInterval(autoScrollInterval);
+            }
+        };
+    }, [autoScrollInterval]);
 
     return (
         <Box
@@ -278,7 +290,6 @@ const TaskBoard: React.FC = () => {
             </Box>
             <DragDropContext
                 onDragEnd={(result) => {
-                    cleanupAutoScroll();
                     onDragEnd(result);
                 }}
                 onDragUpdate={handleDragUpdate}
@@ -290,16 +301,32 @@ const TaskBoard: React.FC = () => {
                         display: 'flex',
                         gap: 2,
                         p: 2,
-                        ...commonStyles.scrollable,
                         overflowX: 'auto',
+                        '&::-webkit-scrollbar': {
+                            height: '0px', // Hide horizontal scrollbar
+                            width: '6px', // Keep vertical scrollbar width
+                        },
+                        '&::-webkit-scrollbar-track': {
+                            bgcolor: 'rgba(0,0,0,0.1)',
+                            borderRadius: '3px',
+                        },
+                        '&::-webkit-scrollbar-thumb': {
+                            bgcolor: 'rgba(0,0,0,0.2)',
+                            borderRadius: '3px',
+                            '&:hover': {
+                                bgcolor: 'rgba(0,0,0,0.3)',
+                            },
+                        },
                     }}
                 >
                     {filteredColumns.map((column) => (
                         <TaskColumn
                             key={column.id}
                             column={column}
-                            tasksCount={column.tasks.length}
-                            onEdit={setEditingTask}
+                            tasks={column.tasks}
+                            droppableId={column.id}
+                            onDeleteTask={handleDeleteTask}
+                            onEditTask={setEditingTask}
                         />
                     ))}
                 </Box>
